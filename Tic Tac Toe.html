@@ -1,0 +1,101 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ultimate Tic Tac Toe</title>
+<style>
+:root{--bg:#08111f;--glass:rgba(255,255,255,.12);--txt:#fff;--accent:#42d4ff}
+body.light{--bg:#eef5ff;--glass:rgba(255,255,255,.7);--txt:#111;--accent:#0066ff}
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+body{margin:0;background:linear-gradient(135deg,#0a0f2f,#162b55,#09131f);color:var(--txt);display:flex;justify-content:center;align-items:center;min-height:100vh;padding:15px;transition:.5s}
+body.light{background:linear-gradient(135deg,#dfefff,#f8fbff,#d7e6ff)}
+.card{width:100%;max-width:700px;background:var(--glass);backdrop-filter:blur(15px);border-radius:22px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+h1{text-align:center;margin:0}
+.controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:12px 0}
+button,select{padding:10px 14px;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:420px;margin:15px auto}
+.cell{aspect-ratio:1;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:58px;border-radius:16px;cursor:pointer;transition:.2s}
+.cell:hover{transform:scale(1.04)}
+.win{animation:pulse .7s infinite alternate}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.08)}}
+#status,#score{text-align:center;margin:8px;font-weight:bold}
+#confetti{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+.piece{position:absolute;font-size:20px;animation:fall 2.8s linear forwards}
+@keyframes fall{from{transform:translateY(-30px)}to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+</style>
+</head>
+<body>
+<div id="confetti"></div>
+<div class="card">
+<h1>🎮 Ultimate Tic‑Tac‑Toe</h1>
+<div class="controls">
+<button onclick="newGame()">New Game</button>
+<button onclick="toggleTheme()">🌙/☀️</button>
+<button onclick="mode='2p';newGame()">2 Players</button>
+<button onclick="mode='ai';newGame()">Vs AI</button>
+<select id="difficulty" onchange="difficulty=this.value">
+<option>Easy</option><option selected>Medium</option><option>Hard</option>
+</select>
+</div>
+<div id="status"></div>
+<div id="score"></div>
+<div class="board" id="board"></div>
+</div>
+<script>
+let board=[],current="X",mode="ai",difficulty="Medium",over=false;
+let scores=JSON.parse(localStorage.getItem("tttScores")||'{"X":0,"O":0,"D":0}');
+const wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+const ctx=new (window.AudioContext||window.webkitAudioContext)();
+function beep(f){let o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=f;o.connect(g);g.connect(ctx.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.12);o.stop(ctx.currentTime+.12);}
+function save(){localStorage.setItem("tttScores",JSON.stringify(scores));}
+function draw(){
+boardDiv.innerHTML="";
+board.forEach((v,i)=>{let d=document.createElement("div");d.className="cell";d.textContent=v;d.onclick=()=>play(i);boardDiv.appendChild(d);});
+status.innerText=over?"Game Over":"Turn: "+current;
+score.innerText=`X:${scores.X} | O:${scores.O} | Draw:${scores.D}`;
+}
+function check(b){
+for(let w of wins){let[a,b1,c]=w;if(b[a]&&b[a]==b[b1]&&b[a]==b[c])return{w:b[a],l:w};}
+if(b.every(x=>x))return{w:"D"};return null;}
+function confetti(){for(let i=0;i<80;i++){let s=document.createElement("div");s.className="piece";s.textContent=["🎉","✨","⭐","🎊"][Math.floor(Math.random()*4)];s.style.left=Math.random()*100+"vw";s.style.animationDelay=(Math.random()*.5)+"s";document.getElementById("confetti").appendChild(s);setTimeout(()=>s.remove(),3000);}}
+function finish(r){
+over=true;
+if(r.w=="D"){scores.D++;status.innerText="Draw!";}
+else{scores[r.w]++;status.innerText=r.w+" Wins!";beep(800);confetti();r.l.forEach(i=>boardDiv.children[i].classList.add("win"));}
+save();draw();}
+function play(i){
+if(over||board[i])return;
+board[i]=current;beep(500);draw();
+let r=check(board);if(r){finish(r);return;}
+current=current=="X"?"O":"X";draw();
+if(mode=="ai"&&current=="O"&&!over)setTimeout(aiMove,250);
+}
+function aiMove(){
+let empt=board.map((v,i)=>v==""?i:null).filter(x=>x!=null);
+let move;
+if(difficulty=="Easy")move=empt[Math.floor(Math.random()*empt.length)];
+else if(difficulty=="Medium"){move=Math.random()<0.5?best():empt[Math.floor(Math.random()*empt.length)];}
+else move=best();
+board[move]="O";beep(350);draw();
+let r=check(board);if(r){finish(r);return;}
+current="X";draw();
+}
+function best(){
+let bestScore=-999,idx;
+for(let i=0;i<9;i++)if(board[i]==""){board[i]="O";let s=minimax(false);board[i]="";if(s>bestScore){bestScore=s;idx=i;}}
+return idx;
+}
+function minimax(maxX){
+let r=check(board);if(r){if(r.w=="O")return 10;if(r.w=="X")return -10;return 0;}
+if(maxX){let b=-999;for(let i=0;i<9;i++)if(board[i]==""){board[i]="O";b=Math.max(b,minimax(false));board[i]="";}return b;}
+else{let b=999;for(let i=0;i<9;i++)if(board[i]==""){board[i]="X";b=Math.min(b,minimax(true));board[i]="";}return b;}
+}
+function newGame(){board=["","","","","","","","",""];current="X";over=false;draw();}
+function toggleTheme(){document.body.classList.toggle("light");}
+const boardDiv=document.getElementById("board"),status=document.getElementById("status"),score=document.getElementById("score");
+newGame();
+</script>
+</body>
+</html>
