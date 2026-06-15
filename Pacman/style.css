@@ -1,0 +1,146 @@
+:root {
+  color-scheme: dark;
+  --game-max-height: 68dvh;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; }
+html, body { min-height: 100%; overscroll-behavior: none; }
+body {
+  margin: 0;
+  background: #05050b;
+  color: #fff;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  min-height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.wrap {
+  width: 100vw;
+  height: 100dvh;
+  padding: calc(8px + var(--safe-top)) 8px calc(8px + var(--safe-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.wrap:fullscreen {
+  background: #05050b;
+}
+
+.topbar {
+  width: min(100%, 720px);
+  flex: 0 0 auto;
+}
+
+h1 {
+  font-size: clamp(0.95rem, 3.6vw, 1.35rem);
+  line-height: 1.1;
+  margin: 0 0 5px;
+  color: #ff0;
+}
+
+.hud {
+  display: flex;
+  justify-content: center;
+  gap: clamp(8px, 3vw, 22px);
+  font-size: clamp(0.78rem, 3.2vw, 1rem);
+  white-space: nowrap;
+}
+.hud span { color: #d7ecff; }
+.hud b { color: #fff; }
+
+.gameArea {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+canvas {
+  display: block;
+  width: min(100vw - 16px, calc(var(--game-max-height) * 0.8260869565), 456px);
+  height: auto;
+  max-height: var(--game-max-height);
+  aspect-ratio: 456 / 552;
+  background: #000;
+  border: 3px solid #111;
+  box-shadow: 0 0 22px #001bff;
+  border-radius: 8px;
+  image-rendering: pixelated;
+  touch-action: none;
+}
+
+#message {
+  flex: 0 0 auto;
+  min-height: 1.15em;
+  max-width: 96vw;
+  margin: 0;
+  color: #9ff;
+  font-size: clamp(0.76rem, 3vw, 0.95rem);
+  line-height: 1.15;
+}
+
+.buttons {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  width: 100%;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.buttons button, .dpad button {
+  background: #101a4a;
+  color: white;
+  border: 2px solid #3467ff;
+  border-radius: 12px;
+  padding: 10px 13px;
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+.buttons button:active, .dpad button:active {
+  transform: translateY(1px);
+  background: #1c2f82;
+}
+
+.dpad {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, min(18vw, 64px));
+  grid-template-areas: ". up ." "left down right";
+  gap: 7px;
+  justify-content: center;
+}
+.dpad button { min-height: min(15vw, 56px); padding: 8px 0; font-size: 1.15rem; }
+.dpad [data-dir="up"] { grid-area: up; }
+.dpad [data-dir="left"] { grid-area: left; }
+.dpad [data-dir="down"] { grid-area: down; }
+.dpad [data-dir="right"] { grid-area: right; }
+
+@media (pointer: fine) and (min-width: 800px) {
+  .dpad { display: none; }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .wrap { gap: 3px; padding-top: calc(4px + var(--safe-top)); padding-bottom: calc(4px + var(--safe-bottom)); }
+  h1 { display: none; }
+  .hud { font-size: 0.78rem; }
+  #message { display: none; }
+  .buttons button { padding: 7px 10px; font-size: 0.82rem; }
+  .dpad { grid-template-columns: repeat(3, min(12vw, 48px)); gap: 4px; }
+  .dpad button { min-height: min(12vw, 42px); font-size: 0.95rem; }
+}
